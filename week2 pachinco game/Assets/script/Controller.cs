@@ -1,12 +1,13 @@
 using UnityEngine;
 
-public class ControllerScript : MonoBehaviour
+public class Controller : MonoBehaviour
 {
     [SerializeField]
-    private GameObject _dropItemPrefab=null;
+    private GameObject _dropItemPrefab = null;
 
     [SerializeField]
     private float _speed = 0.0f;
+
     [SerializeField]
     private Vector2 _maxRange = Vector2.zero;
 
@@ -16,11 +17,24 @@ public class ControllerScript : MonoBehaviour
     {
         _startingPoint = transform.position;
     }
-
-    // Update is called once per frame
     void Update()
     {
+        float facing = Input.GetAxisRaw("Horizontal");
         Vector3 endPos = transform.position;
+
+        if (facing != 0)
+        {
+            if (facing == 1)
+            {
+                transform.localScale = new Vector3(2, transform.localScale.y, transform.localScale.z);
+            }
+            else
+            {
+                transform.localScale = new Vector3(-2, transform.localScale.y, transform.localScale.z);
+
+            }
+        }
+
         if (Input.GetKey(KeyCode.W))
         {
             endPos.y += _speed * Time.deltaTime;
@@ -37,16 +51,14 @@ public class ControllerScript : MonoBehaviour
         {
             endPos.x += _speed * Time.deltaTime;
         }
+
         endPos.x = Mathf.Clamp(endPos.x, _startingPoint.x - _maxRange.x, _startingPoint.x + _maxRange.x);
         endPos.y = Mathf.Clamp(endPos.y, _startingPoint.y - _maxRange.y, _startingPoint.y + _maxRange.y);
         transform.position = endPos;
 
-        if(Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Space))
         {
-            float rotate = Random.Range(0.0f, 360.0f);
-            Quaternion rotationQuat = Quaternion.Euler( 0.0f, 0.0f,rotate);
-            //instantiate create a copy of the prefab at the specified coordinate
-            GameObject newDropItem= Instantiate(_dropItemPrefab,transform.position, rotationQuat);
+            GameObject newDropItem = Instantiate(_dropItemPrefab, transform.position, Quaternion.identity);
         }
     }
 }
