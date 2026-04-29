@@ -4,6 +4,8 @@ using UnityEngine.InputSystem;
 public class PlayerController : MonoBehaviour
 {
     [SerializeField]
+    private Animator _animator=null;
+    [SerializeField]
     private GroundCheckScript _groundCheck = null;
     [SerializeField]
     private float _moveSpeed = 5.0f;
@@ -11,11 +13,14 @@ public class PlayerController : MonoBehaviour
     private float _jumpSpeed = 3.0f;
 
     private float _desiredHorizontalSpeed = 0.0f;
+    private float _facingDirection = 0.0f;
     private Rigidbody2D _rigidBody = null;
 
     private PlayerInput _playerInput = null;
     private InputAction _moveAction = null;
     private InputAction _jumpAction = null;
+    private bool _isJump=false;
+    private bool _isFall=false;
 
     void Awake()
     {
@@ -42,11 +47,32 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         _desiredHorizontalSpeed = _moveAction.ReadValue<Vector2>().x * _moveSpeed;
+        if(_rigidBody.linearVelocityY<-0.1f)
+        {
+            _isFall= true;
+            _isJump=false;
+        }
+        else if(_isFall&& _groundCheck._isGrounded && _rigidBody.linearVelocityY < 0.1f)
+        {
+            
+            _isFall=false;
+        }
     }
 
     private void FixedUpdate()
     {
         _rigidBody.linearVelocityX = _desiredHorizontalSpeed;
+
+        _animator.SetFloat("Speed",Mathf.Abs(_desiredHorizontalSpeed));
+        if(Mathf.Abs(_desiredHorizontalSpeed)>0.1)
+        {
+            _facingDirection = _desiredHorizontalSpeed > 0.0f ? 0.0f : 1.0f;
+        }
+
+        _animator.SetFloat("Speed", Mathf.Abs(_desiredHorizontalSpeed));
+        _animator.SetFloat("Direction", _facingDirection);
+        _animator.SetBool("Jump", _isJump);
+        _animator.SetBool("Fall", _isFall);
     }
 
     private void OnJump(InputAction.CallbackContext context)
@@ -54,6 +80,7 @@ public class PlayerController : MonoBehaviour
         if (_groundCheck._isGrounded && _rigidBody.linearVelocityY < 0.1f)
         {
             _rigidBody.linearVelocityY = _jumpSpeed;
+            _isJump = true;
         }
     }
 
