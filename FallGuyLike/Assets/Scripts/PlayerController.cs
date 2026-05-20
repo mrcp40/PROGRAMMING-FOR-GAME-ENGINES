@@ -1,8 +1,26 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+
 public class PlayerController : MonoBehaviour
 {
+    [Serializable]
+    public class AudioEffects
+    {
+        public AudioClip footStep = null;
+        public AudioClip jump = null;
+        public AudioClip respawn = null;
+        public float _stepRate = 0.15f;
+    }
+    [SerializeField]
+    private AudioEffects _audioEffects = null;
+    [SerializeField]
+    private AudioSource _audioSource = null;
+
+    [SerializeField]
+    private ParticleSystem _fallingEffect = null;
+
     [SerializeField]
     private Animator _animator = null;
 
@@ -34,6 +52,7 @@ public class PlayerController : MonoBehaviour
     private Vector3 _lastGroundPosition = Vector3.zero;
     private float _pitchRotation = 0.0f;
     private float _initialFram = 2.0f;
+    private float _lastStepAudioTime = 0.0f;
     private bool _isJumping = false;
     private bool _isFalling = false;
     void Awake()
@@ -87,9 +106,25 @@ public class PlayerController : MonoBehaviour
 
         if (_groundCheck.IsGround && _rigidbody.linearVelocity.y < 0.1f)
         {
+            if(_isFalling)
+            {
+                _fallingEffect.Play();
+            }
             _lastGroundPosition = transform.position;
             _isJumping = false;
             _isFalling = false;
+
+            if(_moveVelocity.magnitude>0.0f)
+            {
+                _lastStepAudioTime -= Time.deltaTime;
+                if (_lastStepAudioTime <= 0)
+                {
+                    _audioSource.PlayOneShot(_audioEffects.footStep);
+                    _lastStepAudioTime = _audioEffects._stepRate;
+                }
+            }
+
+            
         }
         else if (_rigidbody.linearVelocity.y < -0.1f)
         {
@@ -120,6 +155,7 @@ public class PlayerController : MonoBehaviour
             jumpVelocity.y = _jumpSpeed;
             _rigidbody.linearVelocity = jumpVelocity;
             _isJumping = true;
+            _audioSource.PlayOneShot(_audioEffects.jump);
         }
     }
 
@@ -134,5 +170,6 @@ public class PlayerController : MonoBehaviour
         _lastGroundPosition.y += 1.0f;
         transform.position = _lastGroundPosition;
         _rigidbody.linearVelocity = Vector3.zero;
+        _audioSource.PlayOneShot(_audioEffects.respawn);
     }
 }

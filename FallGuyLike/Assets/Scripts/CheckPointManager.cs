@@ -23,6 +23,7 @@ public class CheckPointManager : MonoBehaviour
     public void SaveCheckPoint(CheckPoint checkPoint)
     {
         _isLastCheckPoint = checkPoint;
+        SaveManager.SetLastSavedCheckpoint(_isLastCheckPoint.transform.position);
     }
 
     public CheckPoint GetSavedCheckPoint()
