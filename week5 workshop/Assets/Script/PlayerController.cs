@@ -4,6 +4,9 @@ using UnityEngine.InputSystem;
 public class PlayerController : MonoBehaviour
 {
     [SerializeField]
+    private Animator _animator=null;
+
+    [SerializeField]
     private Transform _shoulderTransform = null;
     [SerializeField]
     private GroundCheckScript _groundCheck=null;
@@ -28,8 +31,11 @@ public class PlayerController : MonoBehaviour
     private InputAction _jumpAction = null;
     private Vector3 _moveVelocity = Vector3.zero;
     private Vector3 _moveRotation = Vector3.zero;
+    private Vector3 _lastGroundPosition = Vector3.zero;
     private float _pitchRotation = 0.0f;
     private float _initialFram = 2.0f;
+    private bool _isJumping=false;
+    private bool _isFalling=false;
     void Awake()
     {
         _rigidbody = GetComponent<Rigidbody>();
@@ -78,6 +84,23 @@ public class PlayerController : MonoBehaviour
             lookInput.y *= -1;
         }
         _pitchRotation = Mathf.Clamp(_pitchRotation + lookInput.y, _minPitchAngle, _maxPitchAngle);
+       
+        if(_groundCheck.IsGround&&_rigidbody.linearVelocity.y<0.1f)
+        {
+            _lastGroundPosition=transform.position;
+            _isJumping = false;
+            _isFalling = false;
+        }
+        else if (_rigidbody.linearVelocity.y < -0.1f)
+        {
+            _isJumping = false;
+            _isFalling = true;
+        }
+        _animator.SetBool("Moving", _moveVelocity.magnitude > 0.01f);
+        _animator.SetBool("Jump", _isJumping);
+        _animator.SetBool("Fall", _isFalling);
+        _animator.SetFloat("Run",moveInput.y);
+        _animator.SetFloat("Strafe",moveInput.x);
     }
 
     private void FixedUpdate()
@@ -95,6 +118,20 @@ public class PlayerController : MonoBehaviour
             Vector3 jumpVelocity=_rigidbody.linearVelocity;
             jumpVelocity.y = _jumpSpeed;
             _rigidbody.linearVelocity= jumpVelocity;
+            _isJumping = true;
         }
+    }
+
+    public void Respawn()
+    {
+        CheckPoint checkPoint=CheckPointManager.Instance.GetSavedCheckPoint();
+        if(checkPoint!=null)
+        {
+            _lastGroundPosition=checkPoint.transform.position;
+        }
+        
+        _lastGroundPosition.y += 1.0f;
+        transform.position = _lastGroundPosition;
+        _rigidbody.linearVelocity = Vector3.zero;
     }
 }
